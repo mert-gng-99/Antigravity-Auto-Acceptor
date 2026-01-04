@@ -4,7 +4,7 @@ This is a simple JavaScript tool for **Antigravity**.
 
 Sometimes, Antigravity does not automatically accept code changes or suggestions in some clients. This tool clicks the **"Accept all"** button or **IDE buttons** for you automatically. It saves you time until the official bug is fixed. I saw on reddit and I improved the code.
 
-## 🚀 Features
+## Features
 
 * **Auto Click:** Automatically finds and clicks "Accept all" buttons.
 * **Works in Iframes:** Scans inside frames to find hidden buttons.
@@ -12,7 +12,7 @@ Sometimes, Antigravity does not automatically accept code changes or suggestions
 * **Safe Mode:** Does not use `innerHTML` (Bypasses "TrustedHTML" errors).
 * **Custom Speed:** You can set how fast it clicks (e.g., 1000ms = 1 second).
 
-## 🛠️ How to Use
+## How to Use
 
 You do not need to install anything on your computer. You just need the **Console**.
 
