@@ -11,6 +11,7 @@ Sometimes, Antigravity does not automatically accept code changes or suggestions
 * **Control Panel:** You can move the menu, change speed, or pause it.
 * **Safe Mode:** Does not use `innerHTML` (Bypasses "TrustedHTML" errors).
 * **Custom Speed:** You can set how fast it clicks (e.g., 1000ms = 1 second).
+<img width="261" height="280" alt="{19DB2566-5A45-409C-8571-990B85929E47}" src="https://github.com/user-attachments/assets/3286ce50-ecff-4d20-8234-9f096b2a28b6" />
 
 ## How to Use
 
