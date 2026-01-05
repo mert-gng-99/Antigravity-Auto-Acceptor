@@ -1,143 +1,147 @@
 (function() {
-    var config = {
-        run: true,
-        time: 1000,
-        text: true,
-        color: true,
-        scroll: false,
-        count: 0,
+    var settings = {
+        active: true,
+        delay: 1000,
+        accept: true,
+        confirm: true,
+        ide: true,
+        move: false,
+        clicks: 0,
         mini: false
     };
 
-    var old = document.getElementById('mert-panel');
-    if (old) old.remove();
+    var box = document.getElementById('mert-box');
+    if (box) box.remove();
 
-    window.active = false;
-    setTimeout(function() { window.active = true; loop(); }, 100);
+    window.mert_running = false;
+    setTimeout(function() { window.mert_running = true; worker(); }, 100);
 
-    function make(tag, style, dad) {
-        var el = document.createElement(tag);
-        for (var i in style) el.style[i] = style[i];
-        if (dad) dad.appendChild(el);
+    function tag(name, css, parent) {
+        var el = document.createElement(name);
+        for (var k in css) el.style[k] = css[k];
+        if (parent) parent.appendChild(el);
         return el;
     }
 
-    var main = make('div', {
+    var panel = tag('div', {
         position: 'fixed', top: '100px', right: '20px',
-        background: '#222', color: 'white',
-        borderRadius: '8px', border: '1px solid #777',
-        fontFamily: 'Arial, sans-serif', fontSize: '12px', zIndex: '9999999',
-        minWidth: '200px'
+        background: '#222', color: '#fff',
+        borderRadius: '5px', border: '1px solid #999',
+        fontFamily: 'sans-serif', fontSize: '12px', zIndex: '9999999',
+        minWidth: '200px', padding: '5px'
     });
-    main.id = 'mert-panel';
+    panel.id = 'mert-box';
 
-    var head = make('div', {
-        padding: '10px', background: '#333', cursor: 'move',
-        display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #555'
-    }, main);
+    var header = tag('div', {
+        padding: '5px', background: '#444', cursor: 'move',
+        display: 'flex', justifyContent: 'space-between', marginBottom: '5px'
+    }, panel);
 
-    var title = make('span', { fontWeight: 'bold' }, head);
-    title.innerText = 'MERT AUTO';
+    var label = tag('span', { fontWeight: 'bold' }, header);
+    label.innerText = 'MERT AUTO v1.1';
 
-    var btns = make('div', { display: 'flex', gap: '5px' }, head);
-    var minBtn = make('button', { cursor: 'pointer', background: '#555', color: 'white', border: 'none', width: '20px' }, btns);
-    minBtn.innerText = '-';
-    var closeBtn = make('button', { cursor: 'pointer', background: '#a00', color: 'white', border: 'none', width: '20px' }, btns);
-    closeBtn.innerText = 'X';
+    var ctrls = tag('div', { display: 'flex', gap: '5px' }, header);
+    var btnMin = tag('button', { cursor: 'pointer', background: '#666', color: '#fff', border: 'none' }, ctrls);
+    btnMin.innerText = '-';
+    var btnKill = tag('button', { cursor: 'pointer', background: '#c00', color: '#fff', border: 'none' }, ctrls);
+    btnKill.innerText = 'X';
 
-    closeBtn.onclick = function() { main.remove(); window.active = false; };
+    btnKill.onclick = function() { panel.remove(); window.mert_running = false; };
 
-    var body = make('div', { padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }, main);
+    var content = tag('div', { display: 'flex', flexDirection: 'column', gap: '5px' }, panel);
 
-    var info = make('div', {}, body);
-    info.innerText = 'Clicks: ';
-    var num = make('span', { fontWeight: 'bold', color: 'lime' }, info);
-    num.innerText = '0';
+    var stats = tag('div', {}, content);
+    stats.innerText = 'Total: ';
+    var count = tag('span', { color: '#0f0', fontWeight: 'bold' }, stats);
+    count.innerText = '0';
 
-    var speedDiv = make('div', {}, body);
-    speedDiv.innerText = 'Speed (ms): ';
-    var input = make('input', { width: '50px', marginLeft: '5px', background: '#444', color: 'white', border: 'none' }, speedDiv);
-    input.type = 'number';
-    input.value = 1000;
-    input.onchange = function(e) { 
+    var spd = tag('div', {}, content);
+    spd.innerText = 'Speed (ms): ';
+    var spdInp = tag('input', { width: '50px', background: '#333', color: '#fff', border: '1px solid #555' }, spd);
+    spdInp.type = 'number';
+    spdInp.value = 1000;
+    spdInp.onchange = function(e) {
         var v = parseInt(e.target.value);
         if(v < 100) v = 100;
-        config.time = v; 
+        settings.delay = v;
     };
 
-    function check(txt, key) {
-        var row = make('label', { display: 'block', cursor: 'pointer' }, body);
-        var box = make('input', { marginRight: '5px' }, row);
-        box.type = 'checkbox';
-        box.checked = config[key];
-        box.onchange = function(e) { config[key] = e.target.checked; };
-        var span = make('span', {}, row);
-        span.innerText = txt;
+    function add_opt(text, key) {
+        var line = tag('label', { display: 'block', cursor: 'pointer' }, content);
+        var chk = tag('input', { marginRight: '5px' }, line);
+        chk.type = 'checkbox';
+        chk.checked = settings[key];
+        chk.onchange = function(e) { settings[key] = e.target.checked; };
+        var sp = tag('span', {}, line);
+        sp.innerText = text;
     }
 
-    check('System Active', 'run');
-    check('Find Text "Accept all"', 'text');
-    check('Find Color Buttons', 'color');
-    check('Auto Scroll', 'scroll');
+    add_opt('System On', 'active');
+    add_opt('Accept all', 'accept');
+    add_opt('Confirm Step', 'confirm');
+    add_opt('Color Buttons', 'ide');
+    add_opt('Scroll to Button', 'move');
 
-    document.body.appendChild(main);
+    document.body.appendChild(panel);
 
-    minBtn.onclick = function() {
-        config.mini = !config.mini;
-        body.style.display = config.mini ? 'none' : 'flex';
-        minBtn.innerText = config.mini ? '+' : '-';
+    btnMin.onclick = function() {
+        settings.mini = !settings.mini;
+        content.style.display = settings.mini ? 'none' : 'flex';
+        btnMin.innerText = settings.mini ? '+' : '-';
     };
 
-    var drag = false;
-    var offX, offY;
-    head.onmousedown = function(e) {
+    var isDrag = false;
+    var dx, dy;
+    header.onmousedown = function(e) {
         if(e.target.tagName === 'BUTTON') return;
-        drag = true;
-        offX = e.clientX - main.offsetLeft;
-        offY = e.clientY - main.offsetTop;
+        isDrag = true;
+        dx = e.clientX - panel.offsetLeft;
+        dy = e.clientY - panel.offsetTop;
     };
     document.onmousemove = function(e) {
-        if(drag) {
-            main.style.left = (e.clientX - offX) + 'px';
-            main.style.top = (e.clientY - offY) + 'px';
-            main.style.right = 'auto';
-            main.style.bottom = 'auto';
+        if(isDrag) {
+            panel.style.left = (e.clientX - dx) + 'px';
+            panel.style.top = (e.clientY - dy) + 'px';
+            panel.style.right = 'auto';
         }
     };
-    document.onmouseup = function() { drag = false; };
+    document.onmouseup = function() { isDrag = false; };
 
-    function valid(el) {
+    function check_el(el) {
         if(!el || !el.offsetParent) return false;
-        var t = (el.textContent || '').trim();
-        var c = (el.className || '').toString();
+        var txt = (el.innerText || '').trim();
+        var cls = (el.className || '').toString();
 
-        if(config.text && t === "Accept all") return true;
-        if(config.color && t.toLowerCase().includes('accept') && (c.includes('bg-ide') || c.includes('hover:bg-ide'))) return true;
+        if(settings.accept && txt === "Accept all") return true;
+        if(settings.confirm && txt === "Confirm") return true;
+        if(settings.ide && txt.toLowerCase().includes('accept') && (cls.includes('bg-ide') || cls.includes('hover:bg-ide'))) return true;
+        
         return false;
     }
 
-    function scan(node) {
-        var list = node.querySelectorAll('button, div, span, a');
-        list.forEach(function(el) {
-            if(valid(el)) {
-                if(config.scroll) el.scrollIntoView({block:'center', behavior:'smooth'});
-                el.click();
-                config.count++;
-                num.innerText = config.count;
+    function finder(root) {
+        var all = root.querySelectorAll('button, div, span, a');
+        all.forEach(function(item) {
+            if(check_el(item)) {
+                if(settings.move) item.scrollIntoView({block:'center', behavior:'smooth'});
+                item.click();
+                settings.clicks++;
+                count.innerText = settings.clicks;
             }
         });
     }
 
-    function loop() {
-        if(!window.active) return;
-        if(config.run) {
-            scan(document);
-            document.querySelectorAll('iframe').forEach(function(f) {
-                try { scan(f.contentDocument || f.contentWindow.document); } catch(e){}
+    function worker() {
+        if(!window.mert_running) return;
+        if(settings.active) {
+            finder(document);
+            var frames = document.querySelectorAll('iframe');
+            frames.forEach(function(fr) {
+                try { finder(fr.contentDocument || fr.contentWindow.document); } catch(err){}
             });
         }
-        setTimeout(loop, config.time);
+        setTimeout(worker, settings.delay);
     }
 
-    loop();
+    worker();
 })();
