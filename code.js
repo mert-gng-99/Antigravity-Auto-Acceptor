@@ -108,7 +108,12 @@
     document.onmouseup = function() { isDrag = false; };
 
     function check_el(el) {
+       
         if(!el || !el.offsetParent) return false;
+
+        
+        if (el.closest('#mert-box')) return false;
+
         var txt = (el.innerText || '').trim();
         var cls = (el.className || '').toString();
 
