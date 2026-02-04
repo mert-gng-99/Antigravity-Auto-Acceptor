@@ -59,11 +59,13 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
 
 ```javascript
 (function() {
+    
     var settings = {
         active: true,
         delay: 1000,
         accept: true,
         confirm: true,
+        allow: true,   // New setting for "Allow" buttons
         ide: true,
         move: false,
         clicks: 0,
@@ -74,8 +76,13 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
     if (box) box.remove();
 
     window.mert_running = false;
-    setTimeout(function() { window.mert_running = true; worker(); }, 100);
+    setTimeout(function() { 
+        window.mert_running = true; 
+        worker(); 
+    }, 100);
 
+
+    // Helper function to create elements with styles
     function tag(name, css, parent) {
         var el = document.createElement(name);
         for (var k in css) el.style[k] = css[k];
@@ -83,6 +90,9 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
         return el;
     }
 
+
+    // --- UI PANEL SETUP ---
+    
     var panel = tag('div', {
         position: 'fixed', top: '100px', right: '20px',
         background: '#222', color: '#fff',
@@ -98,7 +108,7 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
     }, panel);
 
     var label = tag('span', { fontWeight: 'bold' }, header);
-    label.innerText = 'MERT AUTO v1.1';
+    label.innerText = 'MERT AUTO v1.2';
 
     var ctrls = tag('div', { display: 'flex', gap: '5px' }, header);
     var btnMin = tag('button', { cursor: 'pointer', background: '#666', color: '#fff', border: 'none' }, ctrls);
@@ -106,12 +116,15 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
     var btnKill = tag('button', { cursor: 'pointer', background: '#c00', color: '#fff', border: 'none' }, ctrls);
     btnKill.innerText = 'X';
 
-    btnKill.onclick = function() { panel.remove(); window.mert_running = false; };
+    btnKill.onclick = function() { 
+        panel.remove(); 
+        window.mert_running = false; 
+    };
 
     var content = tag('div', { display: 'flex', flexDirection: 'column', gap: '5px' }, panel);
 
     var stats = tag('div', {}, content);
-    stats.innerText = 'Total: ';
+    stats.innerText = 'Total Clicks: ';
     var count = tag('span', { color: '#0f0', fontWeight: 'bold' }, stats);
     count.innerText = '0';
 
@@ -126,6 +139,8 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
         settings.delay = v;
     };
 
+
+    // Function to add checkboxes to the UI
     function add_opt(text, key) {
         var line = tag('label', { display: 'block', cursor: 'pointer' }, content);
         var chk = tag('input', { marginRight: '5px' }, line);
@@ -137,12 +152,16 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
     }
 
     add_opt('System On', 'active');
-    add_opt('Accept all', 'accept');
+    add_opt('Accept All', 'accept');
     add_opt('Confirm Step', 'confirm');
+    add_opt('Allow Conversation', 'allow'); // Added to UI
     add_opt('Color Buttons', 'ide');
     add_opt('Scroll to Button', 'move');
 
     document.body.appendChild(panel);
+
+
+    // --- INTERACTION LOGIC ---
 
     btnMin.onclick = function() {
         settings.mini = !settings.mini;
@@ -150,6 +169,7 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
         btnMin.innerText = settings.mini ? '+' : '-';
     };
 
+    // Simple Drag Logic
     var isDrag = false;
     var dx, dy;
     header.onmousedown = function(e) {
@@ -167,18 +187,25 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
     };
     document.onmouseup = function() { isDrag = false; };
 
-    function check_el(el) {
-       
-        if(!el || !el.offsetParent) return false;
 
-        
+    // Logic to identify which elements to click
+    function check_el(el) {
+        if(!el || !el.offsetParent) return false;
         if (el.closest('#mert-box')) return false;
 
         var txt = (el.innerText || '').trim();
         var cls = (el.className || '').toString();
 
+        // Check for "Accept all"
         if(settings.accept && txt === "Accept all") return true;
+        
+        // Check for "Confirm"
         if(settings.confirm && txt === "Confirm") return true;
+
+        // Check for "Allow" or "Allow this conversation"
+        if(settings.allow && txt.toLowerCase().includes('allow')) return true;
+
+        // Check for specific IDE-styled buttons
         if(settings.ide && txt.toLowerCase().includes('accept') && (cls.includes('bg-ide') || cls.includes('hover:bg-ide'))) return true;
         
         return false;
@@ -196,19 +223,30 @@ A: Click the red **X** button on the panel, or refresh your page (Ctrl + R).
         });
     }
 
+
+    // The Main Loop
     function worker() {
         if(!window.mert_running) return;
+
         if(settings.active) {
             finder(document);
+
+            // Handle elements inside IFRAMEs (common in many web apps)
             var frames = document.querySelectorAll('iframe');
             frames.forEach(function(fr) {
-                try { finder(fr.contentDocument || fr.contentWindow.document); } catch(err){}
+                try { 
+                    finder(fr.contentDocument || fr.contentWindow.document); 
+                } catch(err) {
+                    // Silently fail if cross-origin policy blocks access
+                }
             });
         }
+
         setTimeout(worker, settings.delay);
     }
 
     worker();
+
 })();
 
 ```
